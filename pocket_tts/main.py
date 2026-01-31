@@ -381,5 +381,21 @@ def export_voice(
             logger.info(f"🎉 Successfully exported {success_count} voices.")
 
 
+@cli_app.command()
+def serve_api(
+    host: Annotated[str, typer.Option(help="Host to bind to")] = "0.0.0.0",
+    port: Annotated[int, typer.Option(help="Port to bind to")] = 8001,
+    config: Annotated[
+        str,
+        typer.Option(
+            help="Path to locally-saved model config .yaml file or model variant signature"
+        ),
+    ] = DEFAULT_VARIANT,
+):
+    """Start the Scalable FastAPI server."""
+    from pocket_tts.api_server import start_server
+    start_server(host=host, port=port, config=config)
+
+
 if __name__ == "__main__":
     cli_app()
