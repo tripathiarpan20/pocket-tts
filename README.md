@@ -204,6 +204,34 @@ docker run -d \
   uv run pocket-tts serve --host 0.0.0.0 --port 8000
 ```
 
+## Deploying to Fly.io
+
+Fly.io is a great option for running this application cheaply and easily. We have included a `fly.toml` configuration file to get you started.
+
+1.  **Install flyctl**: [Follow instructions here](https://fly.io/docs/hands-on/install-flyctl/)
+2.  **Login**: `fly auth login`
+3.  **Launch the app**:
+    ```bash
+    # Initialize the app (creates it on your account)
+    # When asked if you want to copy the configuration to the new app, say yes.
+    # When asked to deploy now, you can say yes.
+    fly launch --no-deploy --copy-config --name pocket-tts-api-YOURNAME
+    ```
+4.  **Deploy**:
+    ```bash
+    fly deploy
+    ```
+
+The `fly.toml` is configured to run the scalable `serve-api` command on a `shared-cpu-2x` machine with 4GB RAM, which is a good balance of cost and performance.
+
+### Configuration
+
+The `fly.toml` file sets the internal port to `8080` (which matches standard cloud defaults) and overrides the default command to:
+`uv run pocket-tts serve-api --host 0.0.0.0 --port 8080`
+
+If you are using the default `fly.toml`, your API will be available at:
+`https://pocket-tts-api-YOURNAME.fly.dev/generate`
+
 ## Projects using Pocket TTS
 
 - [lukasmwerner/pocket-reader](https://github.com/lukasmwerner/pocket-reader) - Browser screen reader

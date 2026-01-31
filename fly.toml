@@ -1,0 +1,44 @@
+
+# fly.toml app configuration file generated for pocket-tts on 2024-01-31
+
+app = "pocket-tts-api"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  # Listen on all interfaces by default for Fly.io
+  # We will override the command in [processes] or via the Dockerfile CMD, 
+  # but here we can set environment variables if needed.
+
+[processes]
+  # We define a process group called 'app' that runs our api server
+  # We use port 8080 as it's a standard convention for containerized apps, 
+  # but we map it to the internal port 8001 that our app uses (or change app to use 8080).
+  # Let's change the app command to use 8080 to match standard Fly expectations easier.
+  app = "uv run pocket-tts serve-api --host 0.0.0.0 --port 8080"
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8080
+  processes = ["app"]
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+    force_https = true
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+  
+  [services.concurrency]
+    type = "requests"
+    hard_limit = 25
+    soft_limit = 20
+
+[[vm]]
+  size = "shared-cpu-2x"
+  memory = "4gb"
+  cpus = 2
