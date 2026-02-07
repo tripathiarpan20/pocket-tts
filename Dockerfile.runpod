@@ -26,9 +26,6 @@ print('Downloading model...'); \
 model = TTSModel.load_model(DEFAULT_VARIANT); \
 print('Model downloaded and cached successfully')"
 
-# Set environment variables
-ENV POCKET_TTS_CONFIG=DEFAULT_VARIANT
-
 # Create an entrypoint script that uses uv run
 RUN echo '#!/bin/bash\nexec uv run "$@"' > /entrypoint.sh && chmod +x /entrypoint.sh
 
