@@ -158,19 +158,30 @@ cd pocket-tts
 # Install runpod SDK
 uv add runpod
 
-# Create a test input file
+# Download a sample audio file for testing
+wget "https://storage.googleapis.com/kagglesdsdata/datasets/829978/1417968/harvard.wav?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=databundle-worker-v2%40kaggle-161607.iam.gserviceaccount.com%2F20260207%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260207T070105Z&X-Goog-Expires=345600&X-Goog-SignedHeaders=host&X-Goog-Signature=ad77f7277b2f7e838ac91a6307fd0191965365b991436b8bfcac84b95351074921d7e5adb71c2cef13fb0056deb34f0d5dc0cb1f23d59022e0d66099050d93964fe42af01f8d480b35aa6214de73fc9c5be187d63d06aa284dd2c71cadfad9b4c78747acf148f070db0231158a110cd4ff496a5f0b0f76eba8aa10d24660427592138a60577a008629c455c7b8871a89d6ab0dd4c7e9ac5b8215a8d69d58a22192ba0f1855362e241d2b99a62371e8aade4d42c73eae7e3bd059b8c1d98e593fcfb43cc9b0b6b0e4de384b4a54732f7c3c00e45d2b80427d144202444bb7956668d32f942fbcd5546131289e2448f72688bc09d3514cabd69efd3d89643d33ad" -O "kaggle_sample.wav"
+
+# Create a test input file with base64 encoded audio
 echo '{
   "input": {
     "text_transcription": "Hello world, this is a test.",
-    "reference_audio": "'$(base64 -i path/to/reference.wav)'"
+    "reference_audio": "'$(base64 -w0 kaggle_sample.wav)'"
   }
 }' > test_input.json
 
-# Run the handler
+# Run the handler (it will auto-detect test_input.json)
 uv run python pocket_tts/rp_handler.py
 ```
 
-The handler will automatically detect `test_input.json` and process it.
+### Testing with Docker
+
+```bash
+# Build the image
+docker build -t pocket-tts-runpod:latest -f Dockerfile.runpod .
+
+# Run with mounted test input
+docker run --rm -v $(pwd)/test_input.json:/app/test_input.json pocket-tts-runpod:latest python -u pocket_tts/rp_handler.py
+```
 
 ## Troubleshooting
 
