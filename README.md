@@ -78,6 +78,35 @@ Navigate to `http://localhost:8000` to try the web interface, it's faster than t
 
 You can check out the [serve documentation](https://github.com/kyutai-labs/pocket-tts/tree/main/docs/serve.md) for more details and examples.
 
+### The `serve-api` command (Scalable)
+
+You can also run a scalable, queue-based API server optimized for concurrent requests.
+```bash
+uvx pocket-tts serve-api
+# or if you installed it manually with pip:
+pocket-tts serve-api
+```
+This server runs on port `8001` by default and exposes a `POST /generate` endpoint. It processes requests sequentially in a background worker to ensure thread safety while managing concurrency via a queue.
+
+**API Usage Example**:
+
+**Endpoint**: `POST http://localhost:8001/generate`
+
+**Payload**:
+```json
+{
+  "text_transcription": "Hello world, this is a test.",
+  "reference_audio": "<base64_encoded_audio_string>"
+}
+```
+
+**Response**:
+```json
+{
+  "audio": "<base64_encoded_generated_wav>"
+}
+```
+
 ### The `export-voice` command
 
 Processing an audio file (e.g., a .wav or .mp3) for voice cloning is relatively slow, but loading a safetensors file -- a voice embedding converted from an audio file -- is very fast. You can use the `export-voice` command to do this conversion. See the [export-voice documentation](https://github.com/kyutai-labs/pocket-tts/tree/main/docs/export_voice.md) for more details and examples.
@@ -147,6 +176,64 @@ We don't have official support for this yet, but you can try out one of these co
 ## Alterative implementations
 - [jishnuvenugopal/pocket-tts-mlx](https://github.com/jishnuvenugopal/pocket-tts-mlx) - MLX backend optimized for Apple Silicon
 - [babybirdprd/pocket-tts](https://github.com/babybirdprd/pocket-tts) - Candle version (Rust) with WebAssembly and PyO3 bindings.
+## Running with Docker
+
+You can run the servers using Docker.
+
+1. Build the image:
+```bash
+git clone https://github.com/tripathiarpan20/pocket-tts
+cd pocket-tts
+docker build -t pocket-tts:latest -f Dockerfile .
+```
+
+2. Run the API Server (Scalable, Port 8001):
+```bash
+docker run -d \
+  -p 8001:8001 \
+  --name pocket_tts_api \
+  --entrypoint "" \
+  pocket-tts \
+  uv run pocket-tts serve-api --host 0.0.0.0 --port 8001
+```
+
+3. Run the UI Server (Port 8000):
+```bash
+docker run -d \
+  -p 8000:8000 \
+  --name pocket_tts_ui \
+  --entrypoint "" \
+  pocket-tts \
+  uv run pocket-tts serve --host 0.0.0.0 --port 8000
+```
+
+## Deploying to Fly.io
+
+Fly.io is a great option for running this application cheaply and easily. We have included a `fly.toml` configuration file to get you started.
+
+1.  **Install flyctl**: [Follow instructions here](https://fly.io/docs/hands-on/install-flyctl/)
+2.  **Login**: `fly auth login`
+3.  **Launch the app**:
+    ```bash
+    # Initialize the app (creates it on your account)
+    # When asked if you want to copy the configuration to the new app, say yes.
+    # When asked to deploy now, you can say yes.
+    fly launch --no-deploy --copy-config --name pocket-tts-api-YOURNAME
+    ```
+4.  **Deploy**:
+    ```bash
+    fly deploy
+    ```
+
+The `fly.toml` is configured to run the scalable `serve-api` command on a `shared-cpu-2x` machine with 4GB RAM, which is a good balance of cost and performance.
+
+### Configuration
+
+The `fly.toml` file sets the internal port to `8080` (which matches standard cloud defaults) and overrides the default command to:
+`uv run pocket-tts serve-api --host 0.0.0.0 --port 8080`
+
+If you are using the default `fly.toml`, your API will be available at:
+`https://pocket-tts-api-YOURNAME.fly.dev/generate`
 
 ## Projects using Pocket TTS
 

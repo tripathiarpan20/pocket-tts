@@ -1,0 +1,28 @@
+
+version: '3.8'
+
+services:
+  pocket-tts-api:
+    build: .
+    container_name: pocket_tts_api
+    command: uv run pocket-tts serve-api --host 0.0.0.0 --port 8001
+    ports:
+      - "8001:8001"
+    restart: unless-stopped
+    volumes:
+      # Optional: Persist huggingface cache to avoid redownloading models on restart
+      - ~/.cache/huggingface:/root/.cache/huggingface
+    environment:
+      - POCKET_TTS_CONFIG=DEFAULT_VARIANT # Change to your preferred config
+      # - HF_TOKEN=your_token_here # If using private/gated models
+
+  # Uncomment if you also want the UI
+  # pocket-tts-ui:
+  #   build: .
+  #   container_name: pocket_tts_ui
+  #   command: uv run pocket-tts serve --host 0.0.0.0 --port 8000
+  #   ports:
+  #     - "8000:8000"
+  #   restart: unless-stopped
+  #   volumes:
+  #     - ~/.cache/huggingface:/root/.cache/huggingface
