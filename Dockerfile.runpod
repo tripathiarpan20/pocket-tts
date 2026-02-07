@@ -13,7 +13,6 @@ COPY ./.python-version .
 COPY ./pocket_tts ./pocket_tts
 
 # Install dependencies and add runpod SDK
-# First, sync the project dependencies, then add runpod
 RUN uv sync && \
     uv add runpod && \
     rm -rf /root/.cache/uv
@@ -30,5 +29,11 @@ print('Model downloaded and cached successfully')"
 # Set environment variables
 ENV POCKET_TTS_CONFIG=DEFAULT_VARIANT
 
-# Run the handler
-CMD ["uv", "run", "python", "-u", "pocket_tts/rp_handler.py"]
+# Create an entrypoint script that uses uv run
+RUN echo '#!/bin/bash\nexec uv run "$@"' > /entrypoint.sh && chmod +x /entrypoint.sh
+
+# Set entrypoint to use uv run for all commands
+ENTRYPOINT ["/entrypoint.sh"]
+
+# Default command runs the handler
+CMD ["python", "-u", "pocket_tts/rp_handler.py"]
