@@ -1,0 +1,34 @@
+# RunPod Serverless Dockerfile for Pocket TTS
+# This is a CPU-based image optimized for RunPod serverless deployment.
+
+FROM ghcr.io/astral-sh/uv:debian
+
+WORKDIR /app
+
+# Copy project files
+COPY ./pyproject.toml .
+COPY ./uv.lock .
+COPY ./README.md .
+COPY ./.python-version .
+COPY ./pocket_tts ./pocket_tts
+
+# Install dependencies and add runpod SDK
+# First, sync the project dependencies, then add runpod
+RUN uv sync && \
+    uv add runpod && \
+    rm -rf /root/.cache/uv
+
+# Pre-download the TTS model to avoid cold start delays
+# This runs the model loading code which caches the model from HuggingFace
+RUN uv run python -c "\
+from pocket_tts.models.tts_model import TTSModel; \
+from pocket_tts.default_parameters import DEFAULT_VARIANT; \
+print('Downloading model...'); \
+model = TTSModel.load_model(DEFAULT_VARIANT); \
+print('Model downloaded and cached successfully')"
+
+# Set environment variables
+ENV POCKET_TTS_CONFIG=DEFAULT_VARIANT
+
+# Run the handler
+CMD ["uv", "run", "python", "-u", "pocket_tts/rp_handler.py"]

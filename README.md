@@ -235,6 +235,37 @@ The `fly.toml` file sets the internal port to `8080` (which matches standard clo
 If you are using the default `fly.toml`, your API will be available at:
 `https://pocket-tts-api-YOURNAME.fly.dev/generate`
 
+## Deploying to RunPod Serverless
+
+[RunPod Serverless](https://runpod.io) is a great option for pay-per-use deployment. You only pay for compute time when requests are being processed.
+
+1. **Build the Docker image**:
+   ```bash
+   docker build -t pocket-tts-runpod:latest -f Dockerfile.runpod .
+   ```
+
+2. **Push to Docker Hub** (or another registry):
+   ```bash
+   docker tag pocket-tts-runpod:latest YOUR_USERNAME/pocket-tts-runpod:latest
+   docker push YOUR_USERNAME/pocket-tts-runpod:latest
+   ```
+
+3. **Create endpoint on RunPod**:
+   - Go to [RunPod Serverless](https://www.runpod.io/console/serverless)
+   - Click **New Endpoint**
+   - Use your container image
+   - Select a CPU worker type (no GPU needed)
+
+4. **Make requests**:
+   ```bash
+   curl -X POST "https://api.runpod.ai/v2/YOUR_ENDPOINT_ID/runsync" \
+     -H "Authorization: Bearer YOUR_API_KEY" \
+     -H "Content-Type: application/json" \
+     -d '{"input": {"text_transcription": "Hello world!", "reference_audio": "<base64>"}}'
+   ```
+
+See the [full RunPod deployment guide](docs/runpod.md) for detailed instructions, API reference, and troubleshooting.
+
 ## Projects using Pocket TTS
 
 - [lukasmwerner/pocket-reader](https://github.com/lukasmwerner/pocket-reader) - Browser screen reader
